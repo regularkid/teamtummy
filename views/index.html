@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang = "en">
+  <head>
+    <title>Team Tummy</title>
+    <meta charset = "utf-8">
+    <meta http-equiv = "X-UA-Compatible" content = "IE = edge">
+    <link rel="stylesheet" href="/style.css">
+    <link href="https://fonts.googleapis.com/css?family=Cabin" rel="stylesheet">
+  </head>
+  <body>
+    
+    <center>
+    <div>
+      <img src="https://cdn.glitch.com/db80d9ba-ffb2-41b7-a6f5-db784958faa4%2FTeamTummy.png?1496378276533" alt="Team Tummy" style="width:800px; max-width:100%;">
+    </div>
+      
+    <br/>
+    
+    <div>
+      <form action="/createmeal" method="post">
+        <div>
+
+          <table>            
+            <tr>
+              <td>
+                <label for="name"><b>Meal Name:</b></label>
+                <br/>
+                <input type="text" id="name" name="name" placeholder="Tuesday's Dinner" size="40" maxlength="100" required pattern="[\s\S]*\S[\s\S]*"/>
+              </td>
+            </tr>
+
+            <tr>          
+              <td>
+                <label for="mealtype"><b>Meal Type (optional):</b></label>
+                <br/>
+                <input type="text" id="mealtype" name="mealtype" placeholder="Pizza" size="40" maxlength="100"/>
+              </td>
+            </tr>
+
+            <tr>          
+              <td>
+                <label for="menu"><b>Menu (optional):</b></label>
+                <br/>
+                <input type="text" id="menu" name="menu" placeholder="www.papajohns.com/order/menu" size="40" maxlength="256"/>
+              </td>
+            </tr>
+
+            <tr>          
+              <td>
+                <label for="invitelist"><b>Invite E-mails (optional):</b></label>
+                <br/>
+                <input type="text" id="invitelist" name="invitelist" placeholder="myteam@work.com, bob@home.com" size="40" maxlength="256"/>
+              </td>
+            </tr>
+
+            <tr>          
+              <td>
+                <label for="cutoff"><b>Order Cutoff Time (optional):</b></label>
+                <br/>
+                <input type="time" id="cutoff" name="cutoff" step="60" value="14:00"/>
+              </td>
+            </tr>
+
+            <tr>
+              <td>
+                <center>
+                  <input type="image" src="https://cdn.glitch.com/db80d9ba-ffb2-41b7-a6f5-db784958faa4%2FButton.png?1495513032853" alt="Submit Form" width="128" height="64" border="0"/>
+                </center>
+              </td>
+            </tr>              
+          </table>
+
+        </div>
+      </form>
+    </div>
+    
+    <br/>
+    
+    <div>
+      <h5>This silly web app was made by Bryan Perfetto with <a href="https://glitch.com/#!/project/teamtummy" target="_blank">Glitch</a>!</h5>
+    </div>
+      
+    </center>
+    
+    <script src = "https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+  </body>
+</html>

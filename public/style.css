@@ -1,0 +1,37 @@
+body {
+    background: url("https://cdn.glitch.com/db80d9ba-ffb2-41b7-a6f5-db784958faa4%2FGradient.png?1495511372752");
+    background-size: 100% 150%;
+    background-repeat: no-repeat;
+    padding-top: 40px;
+    font-family: 'Cabin', sans-serif;
+    font-size:14pt;
+}
+
+input, textarea {
+  font-family: 'Cabin', sans-serif;
+  font-size:16pt;
+}
+
+td {
+  padding:10px 30px 10px 30px;
+  /*border: 1px solid black;*/
+}
+
+fieldset, div, form, input, label, tr, table {
+  margin: 0 auto;
+}
+
+hr {
+    border-style: solid;
+}
+
+/*table {
+  margin: 0 auto;
+  border-collapse: collapse;
+  border: 1px solid black;
+}*/
+
+input[type="checkbox"]{
+  width: 20px; /*Desired width*/
+  height: 20px; /*Desired height*/
+}
