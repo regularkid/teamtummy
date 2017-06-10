@@ -3,6 +3,7 @@ var mongodb = require('mongodb');
 var ObjectId = require('mongodb').ObjectID;
 var bodyParser = require('body-parser');
 var nodemailer = require('nodemailer');
+var striptags = require('striptags');
 var app = express();
 
 app.use(express.static('public'));
@@ -26,10 +27,10 @@ app.post('/createmeal', function(request, response)
 {
   var newMeal =
   {
-      name: request.body.name,
-      mealtype: request.body.mealtype,
-      menu: request.body.menu,
-      invitelist: request.body.invitelist,
+      name: striptags(request.body.name),
+      mealtype: striptags(request.body.mealtype),
+      menu: striptags(request.body.menu),
+      invitelist: striptags(request.body.invitelist),
       cutoff: request.body.cutoff
   };
   
@@ -46,7 +47,7 @@ app.post('/createmeal', function(request, response)
       
       var mealId = result["ops"][0]["_id"];
       console.log("Inserted meal ID: " + mealId);
-      SetCookie(mealId, request.body.name, response);
+      SetCookie(mealId, striptags(request.body.name), response);
       response.redirect('/?mealid=' + mealId);
     });
   });
@@ -56,9 +57,9 @@ app.post('/createtummy', function(request, response)
 {
   var newTummy =
   {
-      name: request.body.name,
-      email: request.body.email,
-      special: request.body.special,
+      name: striptags(request.body.name),
+      email: striptags(request.body.email),
+      special: striptags(request.body.special),
       veggie: request.body.veggie,
       mealid: request.body.mealid
   };
@@ -76,7 +77,7 @@ app.post('/createtummy', function(request, response)
       
       var tummyId = result["ops"][0]["_id"];
       console.log("Inserted tummy ID: " + tummyId);
-      SetCookie(tummyId, request.body.name, response);
+      SetCookie(tummyId, striptags(request.body.name), response);
       response.redirect('/?mealid=' + request.body.mealid);
     });
   });
@@ -131,7 +132,7 @@ function SetCookie(name, value, response)
 {
   //7 * 24 * 60 * 60 * 1000 === 604800000, or 7 days in milliseconds
   var expiryDate = new Date(Number(new Date()) + 604800000); 
-  response.cookie(name, value, { expires: expiryDate, httpOnly: true });
+  response.cookie(name, value, { expires: expiryDate, httpOnly: false });
 }
 
 function SendEMail()
