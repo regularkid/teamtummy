@@ -4,7 +4,7 @@ window.onload = function()
   UpdateTummies();
 };
 
-window.setInterval(UpdateTummies, 15000);
+window.setInterval(UpdateTummies, 30000);
 
 function UpdateMeal()
 {
@@ -26,7 +26,6 @@ function UpdateMeal()
       
       if (resultJSON.menu.trim().length > 0)
       {
-        console.log(encodeURI(resultJSON.menu));
         mealInfoHTML += "<br/>";
         mealInfoHTML += "<b>Menu:</b> <a href='" + ConvertToValidHREF(resultJSON.menu) + "' target='_blank'>" + resultJSON.menu + "</a>";
       }
