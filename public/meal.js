@@ -1,297 +1,245 @@
+const TableWidth = 870;
+const TummyTableWidth = 810;
+
 window.onload = function()
 {
-  UpdateMeal();
-  UpdateTummies();
+    ShowNewTummyForm(false);
+    ShowSignedUpMessage(false);
+
+    UpdateAsync();
+    setInterval(UpdateAsync, 60000);
 };
 
-window.setInterval(UpdateTummies, 30000);
-
-function UpdateMeal()
+function UpdateAsync()
 {
-  $.ajax({url: "getmeal/?mealid=" + getUrlParameter("mealid"), success: function(result)
-    {
-      var resultJSON = JSON.parse(result);
-      var mealInfoHTML = "<table width='870' style='padding:5px 5px 5px 5px'>";
-      
-      mealInfoHTML += "<tr>"
-      mealInfoHTML += "<td align='left'>";
-      
-      mealInfoHTML += "<b><span style='font-size: 50px;'>" + resultJSON.name + "</span></b>";
-      
-      if (resultJSON.mealtype.trim().length > 0)
-      {
-        mealInfoHTML += "<br/>";
-        mealInfoHTML += "<b>Meal Type:</b> " + resultJSON.mealtype;
-      }
-      
-      if (resultJSON.menu.trim().length > 0)
-      {
-        mealInfoHTML += "<br/>";
-        mealInfoHTML += "<b>Menu:</b> <a href='" + ConvertToValidHREF(resultJSON.menu) + "' target='_blank'>" + resultJSON.menu + "</a>";
-      }
-      
-      if (resultJSON.cutoff.trim().length > 0)
-      {
-        mealInfoHTML += "<br/>";
-        mealInfoHTML += "<b>Cutoff Time:</b> " + Time24To12(resultJSON.cutoff);
-      }
+    var mealId = GetUrlParameter("mealid");
 
-      mealInfoHTML += "</td>";
-      mealInfoHTML += "</tr>"
-      
-      mealInfoHTML += "</table>"
-      $("#meal").html(mealInfoHTML);
-    }});
+    $.ajax(
+    {
+        url: "getmeal/?mealid=" + mealId,
+        success: OnReceivedMeal
+    });
+
+    $.ajax(
+    {
+        url: "gettummies/?mealid=" + mealId,
+        success: OnReceivedTummies
+    });
 }
 
-function UpdateTummies()
-{
-  $.ajax({url: "gettummies/?mealid=" + getUrlParameter("mealid"), success: function(result)
+function OnReceivedMeal(result)
+{  
+    var mealInfo = JSON.parse(result);
+    var name = mealInfo.name.trim();
+    var type = mealInfo.mealType != undefined ? mealInfo.mealType.trim() : "";
+    var menu = mealInfo.menu != undefined ? mealInfo.menu.trim() : "";
+    var cutoff = mealInfo.cutoff != undefined ? mealInfo.cutoff.trim() : "";
+
+    var htmlObj = new HTMLObj();
+    htmlObj.BeginTable(TableWidth);
+    htmlObj.BeginRow();
+    htmlObj.BeginColumn();
+
+    htmlObj.AddHTML("<b><span style='font-size: 50px;'>" + name + "</span></b>");
+
+    if (type.length > 0)
     {
-      var darkRow = false;
-      var resultJSON = JSON.parse(result);
-      var tummyTableHTML = "";
-      var showNewTummyForm = true;
-      
-      if (resultJSON.tummies.length > 0)
-      {
-        tummyTableHTML = "<table width='870' style='padding:5px 5px 5px 5px'>";
+        htmlObj.AddHTML("<br/><b>Meal Type:</b> " + type);
+    }
 
-        tummyTableHTML += "<tr>"
-        tummyTableHTML += "<td align='left'>";
-        
-        var numTummiesTotal = resultJSON.tummies.length;
-        var numVeggies = 0;
-        resultJSON.tummies.forEach(function (tummy)
+    if (menu.length > 0)
+    {
+        htmlObj.AddHTML("<br/><b>Menu:</b> <a href='" + ConvertToValidHREF(menu) + "' target='_blank'>" + menu + "</a>");
+    }
+
+    if (cutoff.length > 0)
+    {
+        htmlObj.AddHTML("<br/><b>Cutoff Time:</b> " + Time24To12(cutoff));
+    }
+
+    htmlObj.EndColumn();
+    htmlObj.EndRow();
+    htmlObj.EndTable();
+    htmlObj.ApplyToID("meal");
+}
+
+function OnReceivedTummies(result)
+{
+    var resultJSON = JSON.parse(result);
+    var tummies = resultJSON.tummies;
+    var htmlObj = new HTMLObj();
+
+    // I guess I could have the server calculate this, but whatever...
+    var numTummies = tummies.length;
+    var numVeggies = 0;
+    tummies.forEach(function(tummy)
+    {
+        if (tummy.veggie != null && tummy.veggie != undefined)
         {
-          if (tummy.veggie != null && tummy.veggie != undefined)
-          {
             numVeggies++;
-          }
-        });
-        
-        var tummyTotalStr = "";
-        if (numTummiesTotal == 1)
-        {
-          tummyTotalStr = "Feeding 1 Tummy";
         }
-        else
-        {
-          tummyTotalStr = "Feeding " + numTummiesTotal + " Tummies";
-        }
-        
-        var veggieStr = "";
-        if (numVeggies == 1)
-        {
-          veggieStr = "(Including 1 Veggie Option)";
-        }
-        else
-        {
-          veggieStr = "(Including " + numVeggies + " Veggie Options)";
-        }
+    });
 
-        tummyTableHTML += "<span style='font-size: 30px;'>" + tummyTotalStr + "</span><br/>";
+    // It looks better to omit this if there aren't any tummies signed up yet
+    if (numTummies > 0)
+    {
+        htmlObj.BeginTable(TableWidth);
+        htmlObj.BeginRow();
+        htmlObj.BeginColumn();
+
+        htmlObj.AddHTML("<span style='font-size: 30px;'>" + GetTummiesLabel(numTummies) + "</span><br/>");
         if (numVeggies > 0)
         {
-          tummyTableHTML += "<span style='font-size: 20px;'>" + veggieStr + "</span>";
+            htmlObj.AddHTML("<span style='font-size: 20px;'>" + GetVeggieOptionsLabel(numVeggies) + "</span>");
         }
-        tummyTableHTML += "</tr></td></table>";
-      }
-      
-      tummyTableHTML += "<table>";
-      tummyTableHTML += "<tr>";
-      tummyTableHTML += "<th align='left' width='200' style='padding:5px 5px 5px 5px'>Who's Eating?</th>";
-      tummyTableHTML += "<th align='left' width='450' style='padding:5px 5px 5px 5px'>Order / Special Instructions</th>";
-      tummyTableHTML += "<th align='left' width='120' style='padding:5px 5px 5px 5px'>Veggie Option?</th>";
-      tummyTableHTML += "</tr>";
-      
-      if (resultJSON.tummies.length > 0)
-      {
-        resultJSON.tummies.forEach(function (tummy)
-        {
-          if (GetCookie(tummy._id) != null)
-          {
-            showNewTummyForm = false;
-          }
-          
-          if (darkRow)
-          {
-            tummyTableHTML += "<tr bgcolor='#AAB8FF'>";
-          }
-          else
-          {
-            tummyTableHTML += "<tr bgcolor='#D1D8FF'>";
-          }
-          darkRow = !darkRow;
-
-          tummyTableHTML += "<td  align='left' style='padding:5px 5px 5px 5px'>";
-          tummyTableHTML += tummy.name;
-          tummyTableHTML += "</td>";
-
-          tummyTableHTML += "<td  align='left' style='padding:5px 5px 5px 5px'>";
-          if (tummy.special != null && tummy.special != undefined)
-          {
-            tummyTableHTML += tummy.special;
-          }
-          tummyTableHTML += "</td>";
-
-          tummyTableHTML += "<td  align='left' style='padding:5px 5px 5px 5px'>";
-          if (tummy.veggie != null && tummy.veggie != undefined)
-          {
-            tummyTableHTML += "<center>X</center>";
-          }
-          tummyTableHTML += "</td>";
-
-          tummyTableHTML += "</tr>";
-        });
-      }
-      else
-      {
-        tummyTableHTML += "<tr bgcolor='#AAB8FF'>";
         
-        tummyTableHTML += "<td  align='left' style='padding:5px 5px 5px 5px'>";
-        tummyTableHTML += "Nobody yet...";
-        tummyTableHTML += "</td>";
+        htmlObj.EndColumn();
+        htmlObj.EndRow();
+        htmlObj.EndTable();
+    }
 
-        tummyTableHTML += "<td  align='left' style='padding:5px 5px 5px 5px'/>";
-        tummyTableHTML += "<td  align='left' style='padding:5px 5px 5px 5px'/>";
+    htmlObj.BeginTable(TummyTableWidth);
+    htmlObj.BeginRow();
 
-        tummyTableHTML += "</tr>";
-      }
-      tummyTableHTML += "</table>";
-      
-      $("#tummies").html(tummyTableHTML);
+    htmlObj.BeginColumnHeader(200, 5);
+    htmlObj.AddHTML("Who's Eating?");
+    htmlObj.EndColumnHeader();
 
-      ShowNewTummyForm(showNewTummyForm);
-    }}); 
+    htmlObj.BeginColumnHeader(450, 5);
+    htmlObj.AddHTML("Order / Special Instructions");
+    htmlObj.EndColumnHeader();
+
+    htmlObj.BeginColumnHeader(120, 5);
+    htmlObj.AddHTML("Veggie Option?");
+    htmlObj.EndColumnHeader();
+
+    htmlObj.EndRow();
+
+    var shouldShowNewTummyForm = true;
+    if (tummies.length > 0)
+    {
+        var isOddRow = false;
+        tummies.forEach(function (tummy)
+        {
+            // For now, simply hide the new tummy form if we're already on the list.
+            // However, we may want to enable this if someone wants to add multiple tummies? Not sure what the best approach is yet...
+            if (GetCookie(tummy._id) != null)
+            {
+                shouldShowNewTummyForm = false;
+            }
+
+            htmlObj.BeginRow(GetRowColor(isOddRow));
+            isOddRow = !isOddRow;
+
+            htmlObj.BeginColumn(undefined, 5);
+            htmlObj.AddHTML(tummy.name.trim());
+            htmlObj.EndColumn();
+
+            htmlObj.BeginColumn(undefined, 5);
+            htmlObj.AddHTML(tummy.special.trim());
+            htmlObj.EndColumn();
+
+            htmlObj.BeginColumn(undefined, 5);
+            if (tummy.veggie != undefined)
+            {
+                htmlObj.AddHTML("<center>X</center>");
+            }
+            htmlObj.EndColumn();
+
+            htmlObj.EndRow();
+        });
+    }
+    else
+    {
+        htmlObj.BeginRow(GetRowColor(true));
+
+        htmlObj.BeginColumn(undefined, 5);
+        htmlObj.AddHTML("Nobody yet...");
+        htmlObj.EndColumn();
+
+        htmlObj.BeginColumn(undefined, 5);
+        htmlObj.EndColumn();
+
+        htmlObj.BeginColumn(undefined, 5);
+        htmlObj.EndColumn();
+
+        htmlObj.EndRow();
+    }
+    
+    htmlObj.EndTable();
+    htmlObj.ApplyToID("tummies");
+
+    if (shouldShowNewTummyForm)
+    {
+        ShowNewTummyForm(true);
+    }
+    else
+    {
+        ShowSignedUpMessage(true);
+    }
+}
+
+function GetTummiesLabel(count)
+{
+    var label = "Feeding " + count + " ";
+    if (count == 1)
+    {
+        label += "Tummy";
+    }
+    else
+    {
+        label += "Tummies";
+    }
+
+    return label;
+}
+
+function GetVeggieOptionsLabel(count)
+{
+    var label = "(Including " + count + " Veggie ";
+    if (count == 1)
+    {
+        label += "Option)";
+    }
+    else
+    {
+        label += "Options)";
+    }
+
+    return label;
+}
+
+function GetRowColor(isOddRow)
+{
+    if (isOddRow)
+    {
+        return "#D1D8FF";
+    }
+
+    return "#AAB8FF";
 }
 
 function ShowNewTummyForm(show)
 {
-  var newTummyFormHTML = "";
-  
-  if (show)
-  {
-    newTummyFormHTML = `<form action='/createtummy' method='post'>
-    <table>            
-      <tr>
-        <td>
-          <label for='name'>Name:</label>
-          <br/>
-          <input type='text' id='name' name='name' placeholder='John Smith' size="40" maxlength="100" required pattern="[\\s\\S]*\\S[\\s\\S]*" title="Please enter a valid name :)"/>
-        </td>
-      </tr>
-
-      <tr>
-        <td>
-          <label for='email'>Email (we'll use this to notify you when food is here):</label>
-          <br/>
-          <input type='email' id='email' name='email' placeholder='john.smith@work.com' size="40" maxlength="100"/>
-        </td>
-      </tr>
-
-      <tr>
-        <td>
-          <label for='special'>Order / Special Instructions (optional):</label>
-          <br/>
-          <textarea name="special" id='special' style='width:435px;height:110px;' placeholder='Cheeseburger and Fries\n-or-\nCan we get some breadsticks too?' maxlength="200"/>
-        </td>
-      </tr>
-
-      <tr>
-        <td>
-          <label for='veggie'>Veggie Option?:</label>
-          <!--<br/>-->
-          <input type='checkbox' id='veggie' name='veggie'/>
-        </td>
-      </tr>
-
-      <tr>
-        <td>
-          <center>
-            <input type="image" src="https://cdn.glitch.com/db80d9ba-ffb2-41b7-a6f5-db784958faa4%2FIWantFood.png?1496620864843" alt="Submit Form" width="192" height="96" border="0"/>
-          </center>
-        </td>
-      </tr>
-    </table>
-
-    <br/>
-
-    <input type='hidden' name='mealid' value='` + getUrlParameter("mealid") + `' />
-  </form>`;
-  }
-  else
-  {
-    newTummyFormHTML = "<table width='870' style='padding:5px 5px 5px 5px'>";
-    newTummyFormHTML += "<tr>"
-    newTummyFormHTML += "<td align='left'>";
-    newTummyFormHTML += "<span style='font-size: 20px; color: #009900'><b>You're signed up!</b></span><br/>";
-    newTummyFormHTML += "</tr></td></table>";
-  }
-  
-  if ((show && $("#newtummy").html().length <= 20) ||
-      (!show && $("#newtummy").html().length > 0))
-  {
-    $("#newtummy").html(newTummyFormHTML);
-  }
-}
-
-function getUrlParameter(name)
-{
-    name = name.replace(/[\[]/, '\\[').replace(/[\]]/, '\\]');
-    var regex = new RegExp('[\\?&]' + name + '=([^&#]*)');
-    var results = regex.exec(location.search);
-    return results === null ? '' : decodeURIComponent(results[1].replace(/\+/g, ' '));
-};
-
-function Time24To12(time)
-{
-    var timeParts = time.split(":");
-    var ampm = 'AM';
-
-    if (timeParts[0] >= 12)
+    if (show)
     {
-        ampm = 'PM';
-    }
-
-    if (timeParts[0] > 12)
-    {
-        timeParts[0] = timeParts[0] - 12;
-    }
-
-    var time12Hour = timeParts[0] + ':' + timeParts[1] + ' ' + ampm;
-
-    return time12Hour;
-}
-
-function ConvertToValidHREF(url)
-{
-  if (!/^https?:\/\//i.test(url))
-  {
-    url = 'http://' + url;
-  }
-  
-  return url;
-}
-
-function GetCookie(name)
-{
-    var dc = document.cookie;
-    var prefix = name + "=";
-    var begin = dc.indexOf("; " + prefix);
-    if (begin == -1) {
-        begin = dc.indexOf(prefix);
-        if (begin != 0) return null;
+        $("#hiddenmealid").val(GetUrlParameter("mealid"));
+        $("#newtummy").show();
     }
     else
     {
-        begin += 2;
-        var end = document.cookie.indexOf(";", begin);
-        if (end == -1) {
-        end = dc.length;
-        }
+        $("#newtummy").hide();
     }
-    // because unescape has been deprecated, replaced with decodeURI
-    //return unescape(dc.substring(begin + prefix.length, end));
-    return decodeURI(dc.substring(begin + prefix.length, end));
+}
+
+function ShowSignedUpMessage(show)
+{
+    if (show)
+    {
+        $("#signedup").show();
+    }
+    else
+    {
+        $("#signedup").hide();
+    }
 }
