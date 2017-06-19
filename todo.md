@@ -1,17 +1,14 @@
 ----- TODO -----
-Send e-mail to invite list on creation
-Add button for "Food's here" on meal page if you are creator
-Send e-mail to invite list when "Food's here" is pressed
 Add "Yum" sfx when you create a meal or a tummy
 Add delete option to tummy if you are on the list
 Add delete server logic
 Use cookies to auto fill fields
-Add refresh button to meal page (with note saying "Don't worry, we'll auto refresh every 1 minute")
-Allow anyone to press "Food's Here" button (with a note saying "Please be careful, this will e-mail everyone who has signed up")?
 Add "past cuttoff" display for meal page
 Disable "Add tummy" form if past cuttoff time
-Clean up code
-Use hide/show instead of creating tummy form in javascript
+Add ability to edit tummy info
+Add ability to edit meal info
+Update meal info when food is here
+Remove food is here button when food is here?
 
 ----- DONE -----
 Use mealId instead of name for meal page query
@@ -39,3 +36,9 @@ Seperate new tummy form from tummies display (so I can re-enable 15sec update in
 Add function to get cookie value on client
 Display new tummy form if you aren't already on the list
 Strip tags from all inputs
+Send e-mail to invite list on creation
+Clean up code
+Use hide/show instead of creating tummy form in javascript
+Add button for "Food's here" on meal page if you are creator
+Send e-mail to invite list when "Food's here" is pressed
+Allow anyone to press "Food's Here" button (with a note saying "Please be careful, this will e-mail everyone who has signed up")?
