@@ -1,4 +1,5 @@
 const TableWidth = 870;
+const TableWidthMealInfo = 870;
 const TummyTableWidth = 810;
 
 window.onload = function()
@@ -36,7 +37,7 @@ function OnReceivedMeal(result)
     var cutoff = mealInfo.cutoff != undefined ? mealInfo.cutoff.trim() : "";
 
     var htmlObj = new HTMLObj();
-    htmlObj.BeginTable(TableWidth);
+    htmlObj.BeginTable(TableWidthMealInfo);
     htmlObj.BeginRow();
     htmlObj.BeginColumn();
 
@@ -58,6 +59,11 @@ function OnReceivedMeal(result)
     }
 
     htmlObj.EndColumn();
+  
+    htmlObj.BeginColumn(1, 20);
+    htmlObj.AddHTML("<input type='image' src='https://cdn.glitch.com/db80d9ba-ffb2-41b7-a6f5-db784958faa4%2FFoodsHere.png?1497837775316' alt='Foods Here' style='width:128px; height:64px;' onclick='OnFoodsHere()'>")
+    htmlObj.EndColumn();
+  
     htmlObj.EndRow();
     htmlObj.EndTable();
     htmlObj.ApplyToID("meal");
@@ -241,5 +247,21 @@ function ShowSignedUpMessage(show)
     else
     {
         $("#signedup").hide();
+    }
+}
+
+function OnFoodsHere()
+{
+    var where = prompt("This will let everyone know that the food is here! If you're sure you want to send this email out, use the textbox below to say where the food's at and hit OK:", "In the kitchen");
+    if (where != null)
+    {
+        var mealId = GetUrlParameter("mealid");
+
+        $.ajax(
+        {
+            url: "foodshere/?mealid=" + mealId + "&where=" + where
+        });
+      
+        alert("E-mail sent to the team! Thanks!");
     }
 }

@@ -28,14 +28,16 @@ app.post('/createmeal', function(request, response)
     var newMeal =
     {
         name: striptags(request.body.name),
-        email: striptags(request.body.email != undefined ? request.body.email : ""),
+        email: striptags(request.body.email != undefined ? GetEmailsFromString(request.body.email) : ""),
         mealtype: striptags(request.body.mealtype != undefined ? request.body.mealtype : ""),
         menu: striptags(request.body.menu != undefined ? request.body.menu : ""),
-        invitelist: striptags(request.body.invitelist != undefined ? request.body.invitelist : ""),
+        invitelist: striptags(request.body.invitelist != undefined ? GetEmailsFromString(request.body.invitelist) : ""),
         cutoff: request.body.cutoff
     };
 
-    console.log("Inserting meal: " + JSON.stringify(newMeal));
+    console.log("Inserting meal: " + JSON.stringify(newMeal));  
+    console.log("Email: '" + newMeal.email + "'");
+    console.log("invites: '" + newMeal.invitelist + "'\n");
 
     mongodb.MongoClient.connect(GetDatabaseURI(), function(err, db)
     {
@@ -62,7 +64,7 @@ app.post('/createtummy', function(request, response)
     var newTummy =
     {
         name: striptags(request.body.name),
-        email: striptags(request.body.email != undefined ? request.body.email : ""),
+        email: striptags(request.body.email != undefined ? GetEmailsFromString(request.body.email) : ""),
         special: striptags(request.body.special != undefined ? request.body.special : ""),
         veggie: request.body.veggie,
         mealid: request.body.mealid
@@ -115,6 +117,35 @@ app.get("/getmeal", function (request, response)
         mealsDB.findOne({"_id": new ObjectId(request.query.mealid)}, function(err, meal)
         {
             response.send(JSON.stringify(meal));
+        });
+    });
+});
+
+app.get("/foodshere", function (request, response)
+{
+    mongodb.MongoClient.connect(GetDatabaseURI(), function(err, db)
+    {
+        mongodb.MongoClient.connect(GetDatabaseURI(), function(err, db)
+        {
+            var mealsDB = db.collection("meals");
+            mealsDB.findOne({"_id": new ObjectId(request.query.mealid)}, function(err, meal)
+            {
+                var tummiesDB = db.collection("tummies");
+                tummiesDB.find({ $and: [{ mealid : request.query.mealid }, { mealid : { $exists : true }}]}).toArray(function (err, docs)
+                {
+                    var emails = "";
+                    docs.forEach(function (doc)
+                    {
+                        emails += doc.email + " ";
+                    });
+
+                    emails = GetEmailsFromString(emails);
+                    SendFoodsHereEMail(meal, request.query.mealid, emails, request.query.where);
+
+                    console.log("Food's here email sent to all tummies signed up for meal: '" + request.query.mealid + "'! (" + emails + ")");
+                    response.send("Food's here email sent to all tummies signed up for meal: '" + request.query.mealid + "'!");
+                });
+            });
         });
     });
 });
@@ -213,4 +244,28 @@ function SendInviteEMail(meal, mealId)
     emailObj.SetSubject("You're invited to join a meal: " + meal.name + "!");
     emailObj.SetHTMLBody("To sign up for <b>" + meal.name + "</b> click the link below and enter your info:<br /><br />https://teamtummy.glitch.me/?mealid=" + mealId + "<br /><br />Love,<br />Team Tummy");
     emailObj.Send();
+}
+
+function SendFoodsHereEMail(meal, mealId, emails, where)
+{
+    var emailObj = new EmailObj();
+    emailObj.SetTo(emails);
+    emailObj.SetCC(meal.email);
+    emailObj.SetSubject("Food's here! (" + where + ")");
+    emailObj.SetHTMLBody("Food's here for <b>" + meal.name + "</b> (" + where +")! Come and get it!<br /><br />Meal Info: https://teamtummy.glitch.me/?mealid=" + mealId + "<br /><br />Love,<br />Team Tummy");
+    emailObj.Send();
+}
+
+function GetEmailsFromString(str)
+{
+    var allEmails = "";
+    var regEx = /([a-zA-Z0-9._-]+@[a-zA-Z0-9._-]+\.[a-zA-Z0-9._-]+)/gi;
+
+    var match;
+    while (match = regEx.exec(str))
+    {
+        allEmails += match[1] + ";";
+    }
+
+    return allEmails;
 }
